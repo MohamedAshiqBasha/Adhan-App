@@ -154,8 +154,9 @@ def draw_screen(screen, fonts, prayer_datetimes, status_text):
     y += small_font.get_linesize() + 4
 
     pygame.draw.line(
-        screen, DIVIDER_COLOR, (20, y), (SCREEN_WIDTH - 20, y), width=1
+        screen, DIVIDER_COLOR, (20, y), (SCREEN_WIDTH - 20, y), 1
     )
+
     y += 8
 
     # 2) Main clock
@@ -240,8 +241,9 @@ def draw_screen(screen, fonts, prayer_datetimes, status_text):
         DIVIDER_COLOR,
         (20, SCREEN_HEIGHT - 35),
         (SCREEN_WIDTH - 20, SCREEN_HEIGHT - 35),
-        width=1,
+        1,
     )
+
 
     draw_text(
         screen,
