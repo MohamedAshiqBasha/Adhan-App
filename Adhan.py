@@ -1,5 +1,6 @@
 import time
 from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 import requests
 import pygame
@@ -28,6 +29,10 @@ ACCENT_COLOR = (0, 150, 136)  # teal
 DIVIDER_COLOR = (60, 60, 60)
 
 tz = pytz.timezone(TZ_NAME)
+
+# Optional test flag (leave False for real use)
+DEBUG_FAKE_TIMES = False
+
 
 # -----------------------------
 # Adhan audio configuration (ADDED)
@@ -94,13 +99,18 @@ def get_next_prayer_and_remaining(prayer_datetimes):
 def play_adhan_for_prayer(prayer_name):
     filename = ADHAN_FILES.get(prayer_name)
     if not filename:
+        print("DEBUG: No filename for prayer", prayer_name)
         return
+    full_path = asset_path(filename)
     try:
-        pygame.mixer.music.load(filename)
+        print("DEBUG: Loading file", full_path)
+        pygame.mixer.music.load(full_path)
         pygame.mixer.music.set_volume(1.0)
         pygame.mixer.music.play()
+        print("DEBUG: Started playing", full_path)
     except Exception as e:
         print(f"Error playing adhan for {prayer_name}: {e}")
+
 
 # -----------------------------
 # Pygame drawing helpers
@@ -213,7 +223,7 @@ def draw_screen(screen, fonts, prayer_datetimes, status_text):
         icon_width = 160
         icon_height = 110
         icon_x = SCREEN_WIDTH - 315
-        icon_y = list_top_y + 25
+        icon_y = list_top_y + 15
         screen.blit(
             pygame.transform.smoothscale(
                 pygame.image.load(asset_path("adhan_icon_final.png")).convert_alpha(),
@@ -223,7 +233,6 @@ def draw_screen(screen, fonts, prayer_datetimes, status_text):
         )
     except Exception as e:
         print(f"Error drawing adhan icon: {e}")
-
 
     # 5) Bottom status bar
     pygame.draw.line(
@@ -250,6 +259,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 def asset_path(name):
     return os.path.join(SCRIPT_DIR, name)
 
+
 # -----------------------------
 # Main loop
 # -----------------------------
@@ -263,9 +273,6 @@ def main():
     pygame.mixer.init()
 
     # Load adhan icon image (ADDED)
-    #adhan_icon = pygame.image.load("adhan_icon_final.png").convert_alpha()
-    #adhan_icon = pygame.transform.smoothscale(adhan_icon, (80, 80))
-
     adhan_icon = pygame.image.load(asset_path("adhan_icon_final.png")).convert_alpha()
     adhan_icon = pygame.transform.smoothscale(adhan_icon, (80, 80))
 
@@ -293,6 +300,11 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
+            # DEBUG: press 'a' key to play Fajr adhan manually (ADDED)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_a:
+                print("DEBUG: Manual trigger for Fajr")
+                play_adhan_for_prayer("Fajr")
+
         now = datetime.now(tz)
 
         # New day detection
@@ -307,17 +319,16 @@ def main():
         # Only recompute remaining once per minute
         if now.minute != last_minute:
             last_minute = now.minute
-            # nothing special needed here; get_next_prayer_and_remaining()
-            # uses current time whenever draw_screen() runs.
-            # We just track this in case you later want minute-based logic.
 
-        # Check if it's time to play adhan (ADDED)
+        # Check if it's time to play adhan (FINAL LOGIC)
         result = get_next_prayer_and_remaining(prayer_datetimes)
         if result is not None:
             next_name, next_dt, hours, minutes = result
-            # If the next prayer time is now/past and not yet played
-            if next_dt <= now and last_adhan_prayer != next_name:
+            # Trigger when remaining time reaches 0 minutes, once per prayer
+            if hours == 0 and minutes == 0 and last_adhan_prayer != next_name:
+                print("DEBUG: Triggering adhan for", next_name, "at", now, "scheduled", next_dt)
                 play_adhan_for_prayer(next_name)
+                print("DEBUG: mixer busy?", pygame.mixer.music.get_busy())
                 last_adhan_prayer = next_name
                 status_text = f"Playing Adhan ({next_name})"
 
