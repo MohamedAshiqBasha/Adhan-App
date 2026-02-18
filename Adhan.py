@@ -5,6 +5,8 @@ import requests
 import pygame
 import pytz
 from dateutil import parser
+import os
+
 
 # -----------------------------
 # Configuration
@@ -210,17 +212,18 @@ def draw_screen(screen, fonts, prayer_datetimes, status_text):
     try:
         icon_width = 160
         icon_height = 110
-        icon_x = SCREEN_WIDTH - 315                # 20px padding from right
-        icon_y = list_top_y + 25                   # align with top of prayer list
+        icon_x = SCREEN_WIDTH - 315
+        icon_y = list_top_y + 25
         screen.blit(
             pygame.transform.smoothscale(
-                pygame.image.load("adhan_icon_final.png").convert_alpha(),
+                pygame.image.load(asset_path("adhan_icon_final.png")).convert_alpha(),
                 (icon_width, icon_height)
             ),
             (icon_x, icon_y)
         )
     except Exception as e:
         print(f"Error drawing adhan icon: {e}")
+
 
     # 5) Bottom status bar
     pygame.draw.line(
@@ -241,6 +244,12 @@ def draw_screen(screen, fonts, prayer_datetimes, status_text):
         center=True,
     )
 
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def asset_path(name):
+    return os.path.join(SCRIPT_DIR, name)
+
 # -----------------------------
 # Main loop
 # -----------------------------
@@ -254,7 +263,10 @@ def main():
     pygame.mixer.init()
 
     # Load adhan icon image (ADDED)
-    adhan_icon = pygame.image.load("adhan_icon_final.png").convert_alpha()
+    #adhan_icon = pygame.image.load("adhan_icon_final.png").convert_alpha()
+    #adhan_icon = pygame.transform.smoothscale(adhan_icon, (80, 80))
+
+    adhan_icon = pygame.image.load(asset_path("adhan_icon_final.png")).convert_alpha()
     adhan_icon = pygame.transform.smoothscale(adhan_icon, (80, 80))
 
     header_font = pygame.font.SysFont("DejaVu Sans", 18, bold=True)
